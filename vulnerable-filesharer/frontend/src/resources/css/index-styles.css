@@ -1,0 +1,105 @@
+img {
+    pointer-events: none;
+}
+a{
+    text-decoration: none;
+}
+/* nav */
+
+/* jumbotron */
+.cursor-nochange{
+    cursor: default;
+}
+
+.background-jumbo{
+    width: 100%;
+    height: 56vw;
+    position: relative;
+}
+.background-jumbo video{
+    width: 100%;
+    height: 100%;
+}
+.nonvideo{
+    position: absolute;
+    top: 10%;
+    left: 10%;
+}
+
+.backtext{
+    color: #dc3545;
+    background-color: white;
+    border-radius: .5em;
+    margin-right: 2em;
+}
+
+/* reviews */
+.line{
+    background-color: rgb(245, 245, 245);
+    width: 70%;
+    height: 5px;
+}
+.image{
+    width: 100%;
+    height: 10vw;
+}
+@media (max-width: 576px){
+    .image{
+        height: 15vw;
+    }
+}
+
+/* sliders */
+.limit{
+    width: 30%;
+}
+.SlideImage{
+    width: 60%;
+}
+@media (max-width: 768px) { 
+    .limit{
+        width: 50%;
+    }
+    .SlideImage{
+        width: 40%;
+        object-fit: cover;
+    }
+}
+
+@media (max-width: 576px) { 
+    .limit{
+        width: 100%;
+    }
+    .limit:nth-child(even){
+        background-color: lightcoral;
+        color: white;
+    }
+    .SlideImage{
+        display: none;
+    }
+    .contact{
+        display: none;
+    }
+ }
+
+.abs{
+    position: relative;
+}
+.rel{
+    position: absolute;
+    left: 0%;
+    top: 0%;
+}
+
+.select{
+    display: inline-block;
+    width: 100%;
+    height: calc(2.25rem + 2px);
+    padding: .375rem 1.75rem .375rem .75rem;
+    line-height: 1.5;
+    color: #495057;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    appearance: none;
+}

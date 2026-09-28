@@ -1,0 +1,10 @@
+$primary: #D2042D;
+.bg-primary-dark{
+    background-color: #a80122 !important;
+}
+.btn-primary-dark{
+    color: #fff !important;
+    background-color: #a80122 !important;
+    border-color: #a80122 !important;
+}
+@import "node_modules/bootstrap/scss/bootstrap";

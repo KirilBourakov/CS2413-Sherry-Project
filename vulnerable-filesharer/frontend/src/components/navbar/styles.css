@@ -1,0 +1,15 @@
+.bottom-shadow{
+    
+}
+
+@media (max-width: 992px) {
+    .above {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        width: 100%;
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 8px -8px gray;
+    }
+}

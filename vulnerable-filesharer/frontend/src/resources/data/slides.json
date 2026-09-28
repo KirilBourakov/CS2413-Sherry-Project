@@ -1,0 +1,22 @@
+[
+    {
+        "title": "Why Choose us?",
+        "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sit amet interdum lacus. Integer tincidunt lobortis arcu a semper. Phasellus consequat odio hendrerit dignissim pretium. Morbi vitae aliquam quam, sed tempus nunc.",
+        "img": "choose"  
+    },
+    {
+        "title": "About us.",
+        "content": "Proin in malesuada libero. Donec vehicula ipsum vitae ultricies condimentum. Duis orci velit, hendrerit quis dui nec, iaculis tempus velit. Nulla ultricies tristique aliquam.",
+        "img": "about"
+    },
+    {
+        "title": "Simplicity. Reimagined.",
+        "content": "Suspendisse fermentum malesuada leo et blandit. Etiam sem ex, laoreet non turpis sed, vehicula porttitor diam. Nam hendrerit mi cursus pharetra commodo. In sit amet sodales urna, id accumsan mi.",
+        "img": "simple"
+    },
+    {
+        "title": "Perfect for all uses.",
+        "content": "Etiam nec viverra sem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Morbi nisl ante, luctus vitae neque id, rhoncus mattis eros.",
+        "img": "uses"
+    }
+]
