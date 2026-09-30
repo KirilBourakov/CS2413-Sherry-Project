@@ -44,7 +44,7 @@ function FilePreview({extension, setFileAccessibleCode}){
     // TODO: redo this component in a way where it support different file types and unknown file types.
     useEffect(() => {
         const getFile = async () => {
-            let response = await fetch(`/storage/file?file=${id}`, {
+            let response = await fetch(`${process.env.REACT_APP_API_URL}/storage/file?file=${id}`, {
                 headers: {
                     "Authorization": `Token ${authObj.token}`,
                 }

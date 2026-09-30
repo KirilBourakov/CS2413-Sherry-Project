@@ -38,7 +38,7 @@ export default function EditVisibility(props){
     const addUserRef = createRef()
 
     const changePrivate = async () => {
-        const response = await fetch(`/storage/fileInfo/${id}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/storage/fileInfo/${id}`, {
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": `Token ${authObj.token}`,  
@@ -56,7 +56,7 @@ export default function EditVisibility(props){
     }
 
     const alterUser = async (action, user) => {
-        const response = await fetch(`/storage/fileInfo/${id}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/storage/fileInfo/${id}`, {
             headers: {
                 'Content-Type': 'application/json',
                 "Authorization": `Token ${authObj.token}`,  

@@ -23,7 +23,7 @@ export default function Description({ setFileAccessibleCode, extensionObj }){
       }, [id, update]);
 
     const getdata = async () => {
-        let response = await fetch(`/storage/fileInfo?file=${id}`, {
+        let response = await fetch(`${process.env.REACT_APP_API_URL}/storage/fileInfo?file=${id}`, {
             headers: {
                 "Authorization": `Token ${authObj.token}`,
             }

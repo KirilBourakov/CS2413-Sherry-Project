@@ -11,7 +11,7 @@ export default function UserName() {
     const nav = useNavigate()
     useEffect(() =>{
         const getUser = async () =>{
-            const response = await fetch(`/user/get`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/user/get`, {
                 headers: {
                     "Authorization": `Token ${authObj.token}`,
                 }

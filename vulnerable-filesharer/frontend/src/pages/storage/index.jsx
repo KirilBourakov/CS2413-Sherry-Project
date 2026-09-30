@@ -35,7 +35,7 @@ export default function Main(){
     }, [location]);
 
     const fetchContents = async () => {
-        let response = await fetch(`/storage/directory?path=${path}`, {
+        let response = await fetch(`${process.env.REACT_APP_API_URL}/storage/directory?path=${path}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Token ${authObj.token}`,

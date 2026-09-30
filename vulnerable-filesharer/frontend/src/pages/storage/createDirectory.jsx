@@ -16,7 +16,7 @@ export default function CreateDirectory(props){
             alertError('Folder name may not include /')
             return
         }
-        let response = await fetch(`/storage/directory`, {
+        let response = await fetch(`${process.env.REACT_APP_API_URL}/storage/directory`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Token ${authObj.token}`,
