@@ -79,7 +79,7 @@ export default function Search(){
             return
         }
         
-        let response = await fetch('/storage/search', {
+        let response = await fetch('${process.env.REACT_APP_API_URL}/storage/search', {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Token ${authObj.token}`,

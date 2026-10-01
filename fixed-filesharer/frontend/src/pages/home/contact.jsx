@@ -19,7 +19,7 @@ export default function Contact(){
             return;
         }
         
-        const response = await (await fetch(`api/sendmail`, {
+        const response = await (await fetch(`${process.env.REACT_APP_API_URL}/api/sendmail`, {
             method: 'POST',
             body: JSON.stringify({
                 EmailBack: email,

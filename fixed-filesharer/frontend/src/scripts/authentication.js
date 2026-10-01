@@ -3,7 +3,7 @@ import { getCookie  } from './cookies';
 export async function login(username, password){
     const credentials = `${username}:${password}`;
     const encodedCredentials = btoa(credentials);
-    const response = await fetch(`/user/auth/login`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/user/auth/login`, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Basic ${encodedCredentials}`
@@ -19,7 +19,7 @@ export async function login(username, password){
 }
 
 export async function logout(){
-    const response = await fetch(`/user/auth/logout/`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/user/auth/logout/`, {
         headers: {
             'Authorization': `Token ${getToken().token}`
         },
@@ -34,7 +34,7 @@ export async function logout(){
 }
 
 export async function register(username, password){
-    let response = await fetch(`user/auth/register`, { 
+    let response = await fetch(`${process.env.REACT_APP_API_URL}/user/auth/register`, { 
         headers: {
             'Content-Type': 'application/json',
         },
@@ -65,7 +65,7 @@ export async function isLoggedIn(){
         return Promise.resolve(false)
     }
 
-    const response = await fetch(`/user/auth/check`, {
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/user/auth/check`, {
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Token ${token.token}`,
