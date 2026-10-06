@@ -91,9 +91,13 @@ export default function Upload(props){
 
         try {
             await promise
+            console.log("waited!")
             props.update()
+            console.log("updated!")
+            console.log(props)
             fileRef.current.value = ''
             tagRef.current.value = ''
+             console.log("reset!")
         } catch (error) {
             alertError(error);
         }

@@ -1,0 +1,20 @@
+services:
+  server:
+    build: ./backend
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  app:
+    build: 
+      context: ./frontend
+      target: dev
+    volumes: 
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - server
+    environment:
+      - WATCHPACK_POLLING=true
+      - REACT_APP_API_URL=http://localhost:8000

@@ -64,7 +64,7 @@ function FilePreview({extension, setFileAccessibleCode}){
 
     if (images.includes(extension)){
         FileView = (
-            <div>
+            <a href={fileURL} target="_blank">
                 <img 
                     src={fileURL}  
                     style={{
@@ -74,7 +74,7 @@ function FilePreview({extension, setFileAccessibleCode}){
                         display: 'block',  
                     }}
                 />
-            </div>
+            </a>
         )
     }
     if (text.includes(extension) || pdf.includes(extension)){
