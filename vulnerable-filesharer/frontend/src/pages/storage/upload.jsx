@@ -63,7 +63,7 @@ export default function Upload(props){
         formData.append('tags', tagRef.current.value)
 
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/storage/file', true);
+        xhr.open('POST', `${process.env.REACT_APP_API_URL}/storage/file`, true);
         xhr.setRequestHeader('Authorization', `Token ${authObj.token}`);
 
         const promise = new Promise((resolve, reject) => {
