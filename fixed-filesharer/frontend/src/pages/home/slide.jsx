@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
 export default function Slide(props){
-    let img = require(`./../../resources/images/${props.image}.jpg`);
+    const img = new URL(`../../resources/images/${props.image}.jpg`, import.meta.url);
     let html = ''
     if(props.rotation === 1){
         html = (<div className="d-flex my-3">
@@ -22,7 +22,7 @@ export default function Slide(props){
                 whileInView={{ opacity:1  }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.5, duration: 1.5 }}
-                src={img}
+                src={img.href}
                 />
         </div>)
     }
@@ -34,7 +34,7 @@ export default function Slide(props){
             whileInView={{  opacity:1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.5, duration: 1.5 }}
-            src={img}
+            src={img.href}
             />
 
             <motion.div 
