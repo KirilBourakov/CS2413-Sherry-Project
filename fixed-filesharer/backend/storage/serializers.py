@@ -40,7 +40,7 @@ class CreateDirectorySerializer(serializers.ModelSerializer):
         return parent
     
     def validate_name(self, value):
-        if "/" in value or type(value) != 'string':
+        if "/" in value or not isinstance(value, str):
             raise serializers.ValidationError("Invalid name")
         return value
     
@@ -56,7 +56,7 @@ class CreateDirectorySerializer(serializers.ModelSerializer):
                 name=fullName,
                 parent=parent,
                 owner=user,
-                tags=validated_data['tags']
+                tags=validated_data.get('tags', "")
             )
         except IntegrityError:
             raise serializers.ValidationError('A directory with this name already exists')
@@ -97,7 +97,7 @@ class UploadSerializer(serializers.ModelSerializer):
             author=user,
             file=validated_data['file'], 
             filename=validated_data['filename'],
-            tags=validated_data['tags'],
+            tags=validated_data.get('tags', ""),
             directory=directory,     
         )    
 

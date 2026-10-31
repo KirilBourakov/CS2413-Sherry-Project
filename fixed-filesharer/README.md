@@ -4,9 +4,11 @@ Sherry is a filesharing cloud storage platform that allows it's users to easily 
 # Docker
 Use docker compose up to run
 
-
 ## Building and Running
 Sherry requires python and node to run.
+
+## Dev server
+docker compose -f docker-compose.dev.yml up --build
 
 ### backend
 In the backend folder, create a python venv using
