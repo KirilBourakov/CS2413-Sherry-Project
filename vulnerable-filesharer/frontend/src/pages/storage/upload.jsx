@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { createRef, useContext, useState } from 'react';
+import {createRef, useContext, useRef, useState} from 'react';
 import AlertDanger from '../../components/AlertDanger';
 import AlertSuccess from '../../components/AlertSuccess';
 import { AuthContext } from '../../components/providers/authProvider';
@@ -32,8 +32,8 @@ export default function Upload(props){
     const { authObj, setAuthObj } = useContext(AuthContext)
 
     const [uploadPrecentage, changeUploadPrecentage] = useState(0);
-    const fileRef = createRef();
-    const tagRef = createRef();
+    const fileRef = useRef(null);
+    const tagRef = useRef(null);
 
     // alert error state
     const [errorView, setErrorView] = useState(false);
@@ -104,7 +104,8 @@ export default function Upload(props){
     }
 
     const alertError = (text) => {
-        setErrorText(text)
+        const message = text instanceof Error ? text.message : String(text);
+        setErrorText(message)
         setErrorView(true);
         setTimeout(() => { setErrorView(false); }, 5000);
         return
