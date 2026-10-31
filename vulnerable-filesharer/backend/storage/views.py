@@ -49,7 +49,7 @@ class DirectoryAPI(APIView):
         id = request.GET.get('id', None)
         if id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        directory = get_object_or_404(Directory, pk=id, author=request.user)
+        directory = get_object_or_404(Directory, pk=id, owner=request.user)
         directory.delete()
         return Response(status=status.HTTP_200_OK)
 
@@ -135,7 +135,10 @@ class FileAPI(APIView):
         try:
             file = File.objects.filter(allowed).first()
         except File.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)    
+            return Response(status=status.HTTP_404_NOT_FOUND)  
+        if file is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)  
+              
         response = FileResponse(file.file.open(), filename=file.filename)
         return response
 
