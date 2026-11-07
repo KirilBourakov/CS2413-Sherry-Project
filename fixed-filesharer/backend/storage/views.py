@@ -10,7 +10,6 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions, status, viewsets, parsers
-from knox.auth import TokenAuthentication
 from .authenticators import OptionalTokenAuthentication
 
 # Create your views here.
