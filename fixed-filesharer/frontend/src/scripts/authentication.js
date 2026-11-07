@@ -1,5 +1,3 @@
-import { getCookie  } from './cookies';
-
 export async function login(username, password){
     const credentials = `${username}:${password}`;
     const encodedCredentials = btoa(credentials);

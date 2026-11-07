@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { createRef, useContext, useState } from 'react';
 import{ Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../components/providers/authProvider'
-import { getCookie } from '../../scripts/cookies'
 import { register, login, getToken } from '../../scripts/authentication'
 
 const variants = {
