@@ -9,7 +9,7 @@ export default function UserName() {
     const nav = useNavigate()
     useEffect(() =>{
         const getUser = async () =>{
-            const response = await authedJSONFetch(user/get, "GET");
+            const response = await authedJSONFetch('user/get', "GET");
             if (response.status !== 200){
                 await logout()
                 return nav("/login")
