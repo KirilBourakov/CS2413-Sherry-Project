@@ -68,9 +68,11 @@ class Logout(TokenBlacklistView):
         serializer = self.get_serializer(data={'refresh': key})
         try:
             serializer.is_valid(raise_exception=True)
+            response = Response(serializer.validated_data, status=status.HTTP_200_OK)
         except TokenError as e:
-            raise InvalidToken(e.args[0]) from e
-        return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            response = Response(status=status.HTTP_401_UNAUTHORIZED)
+        response.delete_cookie(key=REFRESH_KEY)
+        return response
 
 
 class GetUser(APIView):
@@ -82,4 +84,5 @@ class GetUser(APIView):
 class CheckUser(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
+        print(request.user.is_authenticated)
         return Response(status=status.HTTP_200_OK)

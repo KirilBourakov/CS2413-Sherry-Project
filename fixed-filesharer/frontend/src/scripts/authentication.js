@@ -31,7 +31,7 @@ export async function logout(){
     });
     token = null;
     if (response.status === 200){
-        return  Promise.resolve(true)
+        return Promise.resolve(true)
     }
     return Promise.resolve(false)
 }

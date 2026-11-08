@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { useContext, useEffect } from 'react';
-import { logout } from '../../scripts/authentication';
+import {isLoggedIn, logout} from '../../scripts/authentication';
 import { useNavigate } from 'react-router-dom';
 
 export default function Logout(){
@@ -8,6 +8,12 @@ export default function Logout(){
     useEffect(() => {
         const run = async () => {
             if (await logout()){
+                nav('/')
+            }
+            else {
+                if (await isLoggedIn()){
+                    await logout()
+                }
                 nav('/')
             }
         }
