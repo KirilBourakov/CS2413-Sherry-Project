@@ -31,7 +31,7 @@ export default function LoginForm(){
             return nav("/storage"); 
         }
 
-        return alert(response.detail)
+        return alert('Login failed, please check your info')
     }
     
     const alert = (text) => {

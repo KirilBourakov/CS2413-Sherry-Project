@@ -1,5 +1,8 @@
+from tokenize import TokenError
+
 from django.contrib.auth import get_user_model, login, logout
 from rest_framework.request import Request
+from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
 
@@ -25,16 +28,18 @@ class UserRegister(APIView):
 class Login(TokenObtainPairView):
     def post(self, request: Request, *args, **kwargs) -> Response:
         data = super().post(request, *args, **kwargs).data
-        response = Response({'access': data['access']}, status=status.HTTP_200_OK)
-        response.set_cookie(
-            key=REFRESH_KEY,
-            value=data['refresh'],
-            max_age=int(api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()),
-            httponly=True,
-            secure=False,   # Can't use HTTP on localhost, unfortunately
-            samesite="Lax",
-        )
-        return response
+        if 'access' in data and 'refresh' in data:
+            response = Response({'access': data['access']}, status=status.HTTP_200_OK)
+            response.set_cookie(
+                key=REFRESH_KEY,
+                value=data['refresh'],
+                max_age=int(api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()),
+                httponly=True,
+                secure=False,   # Can't use HTTP on localhost, unfortunately
+                samesite="Lax",
+            )
+            return response
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
 
 class Refresh(TokenRefreshView):
     def post(self, request: Request, *args, **kwargs) -> Response:
@@ -42,8 +47,12 @@ class Refresh(TokenRefreshView):
         if key is None:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        request.data['refresh'] = key
-        return super().post(request, *args, **kwargs)
+        serializer = self.get_serializer(data={'refresh': key})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0]) from e
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 class Logout(TokenBlacklistView):
     def post(self, request: Request, *args, **kwargs) -> Response:
@@ -56,9 +65,12 @@ class Logout(TokenBlacklistView):
         request.data['refresh'] = key
         super().post(request, *args, **kwargs)
 
-        response = Response(status=status.HTTP_200_OK)
-        response.delete_cookie(key=REFRESH_KEY)
-        return response
+        serializer = self.get_serializer(data={'refresh': key})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            raise InvalidToken(e.args[0]) from e
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
 class GetUser(APIView):
@@ -68,6 +80,6 @@ class GetUser(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class CheckUser(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         return Response(status=status.HTTP_200_OK)

@@ -64,7 +64,7 @@ export default function Upload(props){
         const sendFile = (token) => new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', `${import.meta.env.VITE_API_URL}/storage/file`, true);
-            xhr.setRequestHeader('Authorization', `Token ${token}`);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
             xhr.onload = () => resolve(xhr.status);
             xhr.onerror = () => reject(new Error('Network error occurred'));
@@ -87,7 +87,7 @@ export default function Upload(props){
             tagRef.current.value = ''
             props.update()
         } catch (err) {
-            alert(err.message)
+            alertError(err.message)
         }
     }
 

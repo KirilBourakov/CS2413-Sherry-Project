@@ -8,6 +8,7 @@ export async function login(username, password){
         headers: {
             'Content-Type': 'application/json'
         },
+        credentials: "include",
         method: 'POST',
         body: JSON.stringify({
             "username": username,
@@ -23,10 +24,10 @@ export async function login(username, password){
 export async function logout(){
     const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/logout`, {
         headers: {
-            'Authorization': `Token ${token}`,
-            credentials: "include"
+            'Authorization': `Bearer ${token}`
         },
-        method: 'POST'
+        method: 'POST',
+        credentials: "include"
     });
     token = null;
     if (response.status === 200){
@@ -59,10 +60,16 @@ export async function authedCallback(func) {
 }
 
 export async function authedJSONFetch(url, method, body=null){
+    let recalled = false
+    if (token === null){
+        await refreshToken()
+        recalled = true
+    }
+
     let args = {
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            ...(token && { "Authorization": `Bearer ${token}` }),
         },
         method: method,
     }
@@ -71,7 +78,7 @@ export async function authedJSONFetch(url, method, body=null){
     }
 
     let result = await fetch(`${import.meta.env.VITE_API_URL}/${url}`, args)
-    if (result.status === 401){
+    if (result.status === 401 && !recalled){
         await refreshToken()
         args.headers = {
             'Content-Type': 'application/json',

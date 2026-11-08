@@ -37,7 +37,7 @@ export default function EditVisibility(props){
     const addUserRef = createRef()
 
     const changePrivate = async () => {
-        const response = await authedJSONFetch('storage/fileInfo/${id}', 'PATCH', {
+        const response = await authedJSONFetch(`storage/fileInfo/${id}`, 'PATCH', {
             public: !pub
         })
         if(response.status === 200){

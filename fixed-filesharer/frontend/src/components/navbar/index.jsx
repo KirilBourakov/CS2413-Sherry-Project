@@ -3,11 +3,12 @@ import SearchBar from './search';
 import HamburgerMenu from './hamburger';
 import { useState, useEffect, useContext } from "react"
 import {isLoggedIn} from "../../scripts/authentication.js";
-
+import { useLocation } from "react-router-dom";
 
 export default function Navbar(){
     const [visible, setVisible] = useState()
     const [hasUser, setHasUser] = useState(false)
+    const location = useLocation();
 
     useEffect(()=>{
         async function fetchData(){
@@ -15,7 +16,7 @@ export default function Navbar(){
             setHasUser(x);
         }
         fetchData()
-    }, [])
+    }, [location]) // TODO: must fire every location change, find better way
 
     return(
         <nav className={`navbar navbar-expand-lg navbar-light sticky-top bg-light ${visible ? '' : 'shadow'}`}>
