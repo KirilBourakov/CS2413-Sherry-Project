@@ -1,10 +1,8 @@
 import { createRef, useContext, useState } from 'react';
 import AlertDanger from '../../components/AlertDanger';
-import { AuthContext } from '../../components/providers/authProvider';
+import {authedJSONFetch} from "../../scripts/authentication.js";
 
 export default function CreateDirectory(props){
-    const { authObj, setAuthObj } = useContext(AuthContext)
-
     const nameRef = createRef();
     const tagRef = createRef();
 
@@ -16,20 +14,13 @@ export default function CreateDirectory(props){
             alertError('Folder name may not include /')
             return
         }
-        let response = await fetch(`${import.meta.env.VITE_API_URL}/storage/directory`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Token ${authObj.token}`,
-            },
-            method: 'POST',
-            body: JSON.stringify({
-                'name': '/' + nameRef.current.value,
-                'tags': tagRef.current.value,
-                'parent': props.directory
-            })
+        let response = await authedJSONFetch('storage/directory', 'POST', {
+            'name': '/' + nameRef.current.value,
+            'tags': tagRef.current.value,
+            'parent': props.directory
         })
         if (response.status !== 201){
-            const error = await response.json()
+            const error = response.json()
             if (Object.prototype.toString.call(error) === '[object Array]') {
                 alertError(error[0])
                 return

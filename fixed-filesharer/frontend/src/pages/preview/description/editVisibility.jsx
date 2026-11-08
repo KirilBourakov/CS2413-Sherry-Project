@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useParams } from "react-router-dom";
 import AlertDanger from "../../../components/AlertDanger";
 import AlertSuccess from '../../../components/AlertSuccess'
-import { AuthContext } from "../../../components/providers/authProvider";
+import {authedJSONFetch} from "../../../scripts/authentication.js";
 
 const variants = {
     HoverButton:{
@@ -23,7 +23,6 @@ export default function EditVisibility(props){
     const pub = props.isPublic
     const shared = props.shared
     const update = props.update
-    const { authObj, setAuthObj } = useContext(AuthContext)
 
     //error state
     const [errorView, setErrorView] = useState(false)
@@ -38,17 +37,9 @@ export default function EditVisibility(props){
     const addUserRef = createRef()
 
     const changePrivate = async () => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/storage/fileInfo/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": `Token ${authObj.token}`,  
-            },
-            method: 'PATCH',
-            body: JSON.stringify({
-                public: !pub
-            })
+        const response = await authedJSONFetch('storage/fileInfo/${id}', 'PATCH', {
+            public: !pub
         })
-        console.log(response.status)
         if(response.status === 200){
             update()
         }
@@ -56,16 +47,9 @@ export default function EditVisibility(props){
     }
 
     const alterUser = async (action, user) => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/storage/fileInfo/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": `Token ${authObj.token}`,  
-            },
-            method: 'POST',
-            body: JSON.stringify({
+        const response = await authedJSONFetch(`storage/fileInfo/${id}`, 'POST', {
                 user: user,
                 action: action
-            })
         })
         console.log(response.status)
         if(response.status === 200){

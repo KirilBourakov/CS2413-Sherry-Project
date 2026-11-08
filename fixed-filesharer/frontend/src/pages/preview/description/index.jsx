@@ -4,7 +4,7 @@ import SharedWith from './SharedWith';
 import Tags from './Tags';
 import FileName from './FileName';
 import Edit from './edit';
-import { AuthContext } from '../../../components/providers/authProvider';
+import {authedJSONFetch} from "../../../scripts/authentication.js";
 
 export const updateContext = createContext()
 export const tagContext = createContext()
@@ -14,8 +14,6 @@ export default function Description({ setFileAccessibleCode, extensionObj }){
     const [userdata, setuserdata] = useState(null);
     const [update, forceupdate] = useState(0);
     const { extension, setExtension } = extensionObj
-
-    const { authObj, setAuthObj } = useContext(AuthContext)
     
     const { id } = useParams();
     useEffect(() => {
@@ -23,11 +21,7 @@ export default function Description({ setFileAccessibleCode, extensionObj }){
       }, [id, update]);
 
     const getdata = async () => {
-        let response = await fetch(`${import.meta.env.VITE_API_URL}/storage/fileInfo?file=${id}`, {
-            headers: {
-                "Authorization": `Token ${authObj.token}`,
-            }
-        })
+        let response = await authedJSONFetch(`storage/fileInfo?file=${id}`, 'GET')
         if (response.status !== 200){
             setFileAccessibleCode(response.status)
             return

@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 import EditVisibility from "./editVisibility"
 import { createRef, useContext } from "react"
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../../components/providers/authProvider";
+import {authedJSONFetch} from "../../../scripts/authentication.js";
 
 const variants = {
     HoverButton:{
@@ -19,19 +19,10 @@ const variants = {
 
 const tagsRef = createRef()
 export default function Edit({ isPublic, shared_with, tags, id, update }){
-    const { authObj, setAuthObj } = useContext(AuthContext)
-    
     const nav = useNavigate()
     const updateTags = async () => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/storage/fileInfo/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                "Authorization": `Token ${authObj.token}`,  
-            },
-            method: 'PATCH',
-            body: JSON.stringify({
-                tags: tagsRef.current.value
-            })
+        const response = await authedJSONFetch('storage/fileInfo/${id}', 'PATCH', {
+            tags: tagsRef.current.value
         })
         if (response.status === 200){
             update()
@@ -40,12 +31,7 @@ export default function Edit({ isPublic, shared_with, tags, id, update }){
         return
     }
     const deleteFile = async () => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/storage/file?file=${id}`, {
-            headers: {
-                "Authorization": `Token ${authObj.token}`,  
-            },
-            method: 'DELETE',
-        })
+        const response = await authedJSONFetch('storage/file?file=${id}', 'DELETE')
         if (response.status === 200){
             nav('/storage')
         }

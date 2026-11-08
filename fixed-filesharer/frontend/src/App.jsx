@@ -2,7 +2,6 @@
 import './resources/css/custom.scss';
 
 //react & js
-import { createContext, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
 // componenets
@@ -20,7 +19,6 @@ import AuthProvider from './components/providers/authProvider';
 
 function App() {
   return (
-    <AuthProvider>
       <Router>
         <Navbar/>
         <div>
@@ -43,7 +41,6 @@ function App() {
           </Routes>
         </div>
       </Router>
-    </AuthProvider>
   );
 };
 

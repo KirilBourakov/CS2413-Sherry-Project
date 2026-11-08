@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import {createRef, useContext, useRef, useState} from 'react';
 import AlertDanger from '../../components/AlertDanger';
 import AlertSuccess from '../../components/AlertSuccess';
-import { AuthContext } from '../../components/providers/authProvider';
+import {token} from "../../scripts/authentication.js";
 
 const variants = {
     HoverSubmitFile:{
@@ -29,8 +29,6 @@ const variants = {
 };
 
 export default function Upload(props){
-    const { authObj, setAuthObj } = useContext(AuthContext)
-
     const [uploadPrecentage, changeUploadPrecentage] = useState(0);
     const fileRef = useRef(null);
     const tagRef = useRef(null);
@@ -64,7 +62,7 @@ export default function Upload(props){
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', `${import.meta.env.VITE_API_URL}/storage/file`, true);
-        xhr.setRequestHeader('Authorization', `Token ${authObj.token}`);
+        xhr.setRequestHeader('Authorization', `Token ${token}`);
 
         const promise = new Promise((resolve, reject) => {
             xhr.onload = () => {

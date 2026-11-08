@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { createRef, useContext, useState } from 'react';
 import{ Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../components/providers/authProvider'
 import { register, login, getToken } from '../../scripts/authentication'
 
 const variants = {
@@ -13,7 +12,6 @@ export default function CreateAccount() {
     const [alertShow, changeAlertShow] = useState(false);
     const [alertText, changeAlertText] = useState('');
     const nav = useNavigate()
-    const { authObj, setAuthObj } = useContext(AuthContext)
     
     //create ref
     const usernameRef = createRef();
@@ -37,7 +35,6 @@ export default function CreateAccount() {
         let response = await register(usernameValue, passwordValue)
         if (response === 201){
             let response = await login(usernameValue, passwordValue)
-            setAuthObj(getToken())
             return nav("/storage"); 
         }
         return alert('Something went wrong, make sure your information is valid, and try again later.');

@@ -9,6 +9,6 @@ urlpatterns = [
     path('auth/logout', TokenBlacklistView.as_view(), name='logout'),
     path('auth/register', views.UserRegister.as_view(), name='register'),
 
-    # path('auth/check', views.CheckUser.as_view(), name='checkUser'),
-    # path('get', views.GetUser.as_view(), name='GetUser'),
+    path('auth/check', views.CheckUser.as_view(), name='checkUser'),
+    path('get', views.GetUser.as_view(), name='GetUser'),
 ]

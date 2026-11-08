@@ -1,17 +1,13 @@
 import { motion } from 'framer-motion'
 import { useContext, useEffect } from 'react';
-import { AuthContext } from '../../components/providers/authProvider'
-import { logout, getToken } from '../../scripts/authentication';
+import { logout } from '../../scripts/authentication';
 import { useNavigate } from 'react-router-dom';
 
 export default function Logout(){
-    const { authObj, setAuthObj } = useContext(AuthContext)
-    
     const nav = useNavigate()
     useEffect(() => {
         const run = async () => {
             if (await logout()){
-                setAuthObj(getToken())
                 nav('/')
             }
         }

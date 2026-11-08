@@ -5,11 +5,9 @@ import File from '../../components/file'
 import Toast from "../../components/toast";
 import { useLocation } from "react-router-dom";
 import { TbFaceIdError } from "react-icons/tb";
-import { AuthContext } from "../../components/providers/authProvider";
+import {authedJSONFetch} from "../../scripts/authentication.js";
 
 export default function Search(){
-    const { authObj, setAuthObj } = useContext(AuthContext)
-
     const searchSharedWith = useRef();
     const searchPublic = useRef();
     const searchMine = useRef();
@@ -79,14 +77,7 @@ export default function Search(){
             return
         }
         
-        let response = await fetch('${import.meta.env.VITE_API_URL}/storage/search', {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Token ${authObj.token}`,
-            },
-            method: 'POST',
-            body: JSON.stringify(search)
-        })
+        let response = await authedJSONFetch('storage/search', 'POST', search);
         response = await response.json()
 
         if (response.directories.length === 0 && response.files.length === 0){

@@ -1,24 +1,17 @@
 import { useContext, useEffect, useState } from "react";
 import{ Link, useNavigate } from 'react-router-dom';
 import { motion } from "framer-motion";
-import { getToken, clearUser, logout } from '../../scripts/authentication'
-import { AuthContext } from "../providers/authProvider";
+import {logout, authedJSONFetch} from '../../scripts/authentication'
 
 export default function UserName() {
     const [user, setUser] = useState([])
-    const { authObj, setAuthObj } = useContext(AuthContext)
     
     const nav = useNavigate()
     useEffect(() =>{
         const getUser = async () =>{
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/user/get`, {
-                headers: {
-                    "Authorization": `Token ${authObj.token}`,
-                }
-            })
+            const response = await authedJSONFetch(user/get, "GET");
             if (response.status !== 200){
                 await logout()
-                setAuthObj(getToken())
                 return nav("/login")
             }
             const body = await response.json()
@@ -26,6 +19,7 @@ export default function UserName() {
         }
         getUser()
     }, []);
+
     return(
         <motion.div className="me-auto" whileHover={{ scale: 1.1 }}>
         <Link to='/storage'>
