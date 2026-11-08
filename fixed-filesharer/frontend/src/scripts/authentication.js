@@ -77,7 +77,7 @@ export async function checkLoginAndRedirect(nav){
 }
 
 async function refreshToken(){
-    refreshCall ??= fetch(`${import.meta.env.VITE_API_URL}/api/auth/login/refresh`, {
+    refreshCall ??= fetch(`${import.meta.env.VITE_API_URL}/user/auth/login/refresh`, {
         method: "POST",
         credentials: "include",
     })
