@@ -1,6 +1,6 @@
 
 
-export let token = null;
+let token = null;
 let refreshCall = null;
 
 export async function login(username, password){
@@ -49,6 +49,15 @@ export async function register(username, password){
     return Promise.resolve(response.status)
 }
 
+export async function authedCallback(func) {
+    let status = await func(token)
+    if (status === 401){
+        await refreshToken()
+        status = await func(token)
+    }
+    return status
+}
+
 export async function authedJSONFetch(url, method, body=null){
     let args = {
         headers: {
@@ -81,7 +90,7 @@ export async function checkLoginAndRedirect(nav){
     }
 }
 
-export async function refreshToken(){
+async function refreshToken(){
     refreshCall ??= fetch(`${import.meta.env.VITE_API_URL}/user/auth/login/refresh`, {
         method: "POST",
         credentials: "include",
