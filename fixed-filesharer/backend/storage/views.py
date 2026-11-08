@@ -3,16 +3,15 @@ from django.http import FileResponse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from .serializers import DirectoryContentDirectorySerializer, DirectoryContentFileSerializer, UploadSerializer, CreateDirectorySerializer, FileSerializer, FileInfoSerializer, SearchPayloadSerializer
 from .models import File, Directory
 from rest_framework.views import APIView
-from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from rest_framework import permissions, status, viewsets, parsers
-from .authenticators import OptionalTokenAuthentication
+from rest_framework import permissions, status, parsers
 
-# Create your views here.
 class DirectoryAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
@@ -119,8 +118,9 @@ class FileAPI(APIView):
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
-    
-    authentication_classes = [OptionalTokenAuthentication]
+
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
     parser_classes = [parsers.MultiPartParser]
 
     def get(self, request, *args, **kwargs):
@@ -160,11 +160,13 @@ class FileAPI(APIView):
         return Response(status=status.HTTP_200_OK)
     
 class FileInfoAPI(APIView):
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [AllowAny]
+
     def get_permissions(self):
         if self.request.method == 'GET':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
-    authentication_classes = [OptionalTokenAuthentication]
 
     def get(self, request, *args, **kwargs):
         requested_file = request.GET.get('file', None)
