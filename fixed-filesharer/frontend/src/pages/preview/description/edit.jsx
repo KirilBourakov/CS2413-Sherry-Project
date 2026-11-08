@@ -21,7 +21,7 @@ const tagsRef = createRef()
 export default function Edit({ isPublic, shared_with, tags, id, update }){
     const nav = useNavigate()
     const updateTags = async () => {
-        const response = await authedJSONFetch('storage/fileInfo/${id}', 'PATCH', {
+        const response = await authedJSONFetch(`storage/fileInfo/${id}`, 'PATCH', {
             tags: tagsRef.current.value
         })
         if (response.status === 200){
@@ -31,7 +31,7 @@ export default function Edit({ isPublic, shared_with, tags, id, update }){
         return
     }
     const deleteFile = async () => {
-        const response = await authedJSONFetch('storage/file?file=${id}', 'DELETE')
+        const response = await authedJSONFetch(`storage/file?file=${id}`, 'DELETE')
         if (response.status === 200){
             nav('/storage')
         }

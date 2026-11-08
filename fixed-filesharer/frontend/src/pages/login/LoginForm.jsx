@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import{ Link, useNavigate } from 'react-router-dom';
 import { createRef, useContext, useState } from 'react';
 import AlertDanger from '../../components/AlertDanger';
-import { login, getToken } from './../../scripts/authentication'
+import { login } from './../../scripts/authentication'
 
 const variants = {
     open: { opacity: 1, x: 0 },

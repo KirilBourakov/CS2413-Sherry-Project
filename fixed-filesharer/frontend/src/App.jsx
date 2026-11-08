@@ -14,9 +14,6 @@ import LogoutView from './pages/logout';
 import Item from './pages/preview';
 import Search from './pages/search';
 
-// providers
-import AuthProvider from './components/providers/authProvider';
-
 function App() {
   return (
       <Router>
@@ -42,6 +39,6 @@ function App() {
         </div>
       </Router>
   );
-};
+}
 
 export default App;

@@ -4,27 +4,27 @@ export let token = null;
 let refreshCall = null;
 
 export async function login(username, password){
-    const credentials = `${username}:${password}`;
-    const encodedCredentials = btoa(credentials);
     const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/login`, {
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${encodedCredentials}`
+            'Content-Type': 'application/json'
         },
         method: 'POST',
+        body: JSON.stringify({
+            "username": username,
+            "password": password
+        })
     });
-    const body = await response.json()
-    token = body['access']
-    return {
-        'status': response.status,
-        'body': body
+    if (response.status === 200){
+        token = (await response.json())['access'];
     }
+    return response;
 }
 
 export async function logout(){
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/logout/`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/logout`, {
         headers: {
-            'Authorization': `Token ${token}`
+            'Authorization': `Token ${token}`,
+            credentials: "include"
         },
         method: 'POST'
     });
@@ -62,8 +62,13 @@ export async function authedJSONFetch(url, method, body=null){
     }
 
     let result = await fetch(`${import.meta.env.VITE_API_URL}/${url}`, args)
-    if (result.status === 403){
+    if (result.status === 401){
         await refreshToken()
+        args.headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+
         return await fetch(`${import.meta.env.VITE_API_URL}/${url}`, args)
     }
     return result
@@ -76,7 +81,7 @@ export async function checkLoginAndRedirect(nav){
     }
 }
 
-async function refreshToken(){
+export async function refreshToken(){
     refreshCall ??= fetch(`${import.meta.env.VITE_API_URL}/user/auth/login/refresh`, {
         method: "POST",
         credentials: "include",

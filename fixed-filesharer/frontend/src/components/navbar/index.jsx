@@ -15,7 +15,7 @@ export default function Navbar(){
             setHasUser(x);
         }
         fetchData()
-    })
+    }, [])
 
     return(
         <nav className={`navbar navbar-expand-lg navbar-light sticky-top bg-light ${visible ? '' : 'shadow'}`}>

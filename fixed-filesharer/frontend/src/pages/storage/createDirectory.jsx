@@ -20,7 +20,7 @@ export default function CreateDirectory(props){
             'parent': props.directory
         })
         if (response.status !== 201){
-            const error = response.json()
+            const error = await response.json()
             if (Object.prototype.toString.call(error) === '[object Array]') {
                 alertError(error[0])
                 return

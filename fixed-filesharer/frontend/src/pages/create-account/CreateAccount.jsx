@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { createRef, useContext, useState } from 'react';
 import{ Link, useNavigate } from 'react-router-dom';
-import { register, login, getToken } from '../../scripts/authentication'
+import { register, login } from '../../scripts/authentication'
 
 const variants = {
     open: { opacity: 1, x: 0 },
