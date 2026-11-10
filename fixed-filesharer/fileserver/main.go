@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -27,6 +29,10 @@ type Request struct {
 	User_id   string `json:"author"`
 	Action    string `json:"action"`
 	Time      int64  `json:"time"`
+}
+
+type EncryptedRequest struct {
+	Key string `json:"key"`
 }
 
 func request_timeout(request Request) bool {
@@ -76,6 +82,75 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func handleFileUpload(request Request, r *http.Request) (string, error) {
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	userpath := filepath.Join(uploadDir, request.User_id)
+	fpath := filepath.Join(userpath, request.File_uuid+filepath.Ext(header.Filename))
+	fmt.Printf("Uploading %s to %s\n", fpath, userpath)
+
+	err = os.MkdirAll(userpath, 0655)
+	if err != nil {
+		return "", err
+	}
+
+	output, err := os.Create(fpath)
+	if err != nil {
+		return "", err
+	}
+	defer output.Close()
+
+	_, err = io.Copy(output, file)
+	if err != nil {
+		return "", err
+	}
+	return fpath, nil
+}
+
+func reportUploadSuccess(request Request, retry bool) error {
+	client := &http.Client{Timeout: 5 * time.Second}
+
+	request.Time = time.Now().Unix()
+	request.Action = "UPLOAD_SUCCESS"
+
+	payload, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+	encjson, err := encrypt(string(payload))
+	if err != nil {
+		return err
+	}
+	json_str, err := json.Marshal(EncryptedRequest{
+		Key: encjson,
+	})
+	if err != nil {
+		return err
+	}
+
+	url := os.Getenv("BACKEND_URL") + "/storage/file"
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(json_str))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	response, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if response.StatusCode != 200 {
+		if retry {
+			return reportUploadSuccess(request, false)
+		}
+		return errors.New("Failed to confirm upload")
+	}
+	return nil
+}
+
 func postFile(w http.ResponseWriter, r *http.Request) {
 	jsonstr, err := decrypt(r.FormValue("key"))
 	if err != nil {
@@ -96,38 +171,20 @@ func postFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Print(request)
-
-	file, header, err := r.FormFile("file")
+	fpath, err := handleFileUpload(request, r)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
-
-	userpath := filepath.Join(uploadDir, request.User_id)
-	fpath := filepath.Join(userpath, request.File_uuid+filepath.Ext(header.Filename))
-	fmt.Printf("Uploading %s to %s\n", fpath, userpath)
-
-	err = os.MkdirAll(userpath, 0655)
-	if err != nil {
+		fmt.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	output, err := os.Create(fpath)
+	err = reportUploadSuccess(request, true)
 	if err != nil {
+		_ = os.Remove(fpath)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	defer output.Close()
-
-	_, err = io.Copy(output, file)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-
-	fmt.Fprint(w, "File upload successful")
+	w.WriteHeader(http.StatusOK)
 }
 
 func deleteFile(w http.ResponseWriter, r *http.Request) {

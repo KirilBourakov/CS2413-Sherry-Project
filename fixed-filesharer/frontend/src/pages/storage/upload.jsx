@@ -65,7 +65,7 @@ export default function Upload(props){
             return
         }
         const uploadToken = (await uploadResponse.json())['key']
-
+        console.log(uploadToken)
         // Send file
         const formData = new FormData();
         formData.append('key', uploadToken)
@@ -73,7 +73,6 @@ export default function Upload(props){
         const sendFile = (token) => new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', `${import.meta.env.VITE_FILE_URL}/storage/file`, true);
-            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
             xhr.onload = () => resolve(xhr.status);
             xhr.onerror = () => reject(new Error('Network error occurred'));

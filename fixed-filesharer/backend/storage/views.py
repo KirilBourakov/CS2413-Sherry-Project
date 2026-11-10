@@ -33,9 +33,9 @@ class DirectoryAPI(APIView):
         directory_serializer = DirectoryContentDirectorySerializer(subdirectories, many=True)
 
         if requested_directory == '/Shared_With_Me/':
-            files = File.objects.filter(shared_with=user)
+            files = File.objects.filter(shared_with=user, pending=False)
         else:
-            files = File.objects.filter(author=user).filter(directory__name=requested_directory)
+            files = File.objects.filter(author=user, pending=False).filter(directory__name=requested_directory)
         file_serializer = DirectoryContentFileSerializer(files, many=True)
 
         data = {
@@ -69,7 +69,7 @@ class SearchAPI(APIView):
         if serializer.is_valid():
             search_data = serializer.validated_data
             directories = Directory.objects.all()
-            files = File.objects.all()
+            files = File.objects.all().filter(pending=False)
             
             fileQ = Q()
             directoryQ = Q()
@@ -140,10 +140,10 @@ class FileInfoAPI(APIView):
 
         try:
             if request.user.is_authenticated:
-                file = File.objects.filter(Q(author=request.user) | Q(shared_with=request.user)).filter(
+                file = File.objects.filter(Q(author=request.user, pending=False) | Q(shared_with=request.user, pending=False)).filter(
                     id=requested_file).first()
             else:
-                file = File.objects.filter(public=True).filter(id=requested_file).first()
+                file = File.objects.filter(public=True, pending=False).filter(id=requested_file).first()
         except File.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -186,7 +186,7 @@ class FileInfoAPI(APIView):
 
 class FileAPI(APIView):
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method == 'GET' or self.request.method == 'PATCH':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
@@ -198,11 +198,11 @@ class FileAPI(APIView):
             return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.user.is_authenticated:
-            allowed = Q(pk=requested_file, author=request.user) | Q(pk=requested_file, shared_with=request.user)
+            allowed = Q(pk=requested_file, author=request.user, pending=False) | Q(pk=requested_file, shared_with=request.user, pending=False)
         else:
-            allowed = Q(pk=requested_file, public=True)
+            allowed = Q(pk=requested_file, public=True, pending=False)
         try:
-            file = File.objects.filter(allowed).first()
+            file = File.objects.filter(allowed, pending=False).first()
         except File.DoesNotExist:
             file = None
         if file is None:
@@ -253,7 +253,7 @@ class FileAPI(APIView):
         request_data = json.loads(self.decrypt(key))
 
         if request_data['action'] == "UPLOAD_SUCCESS":
-            file = File.objects.get(id=request_data['id'], author=request.user)
+            file = File.objects.get(id=request_data['id'])
             file.pending = False
             file.save()
             return Response(status=status.HTTP_200_OK)
