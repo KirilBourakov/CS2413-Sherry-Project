@@ -31,6 +31,28 @@ type Request struct {
 	Time      int64  `json:"time"`
 }
 
+func (r *Request) UserPath() string {
+	return filepath.Join(uploadDir, r.User_id)
+}
+
+func (r *Request) FilePath(ext string) string { // TODO: figure out what's happening with extensions
+	return filepath.Join(r.UserPath(), r.File_uuid+ext)
+}
+
+func RequestFromEncrypted(key string) (Request, error) {
+	jsonstr, err := decrypt(key)
+	if err != nil {
+		return Request{}, err
+	}
+
+	var request Request
+	err = json.Unmarshal([]byte(jsonstr), &request)
+	if err != nil {
+		return Request{}, err
+	}
+	return request, nil
+}
+
 type EncryptedRequest struct {
 	Key string `json:"key"`
 }
@@ -89,11 +111,8 @@ func handleFileUpload(request Request, r *http.Request) (string, error) {
 	}
 	defer file.Close()
 
-	userpath := filepath.Join(uploadDir, request.User_id)
-	fpath := filepath.Join(userpath, request.File_uuid+filepath.Ext(header.Filename))
-	fmt.Printf("Uploading %s to %s\n", fpath, userpath)
-
-	err = os.MkdirAll(userpath, 0655)
+	fpath := request.FilePath(filepath.Ext(header.Filename))
+	err = os.MkdirAll(request.UserPath(), 0655)
 	if err != nil {
 		return "", err
 	}
@@ -152,21 +171,13 @@ func reportUploadSuccess(request Request, retry bool) error {
 }
 
 func postFile(w http.ResponseWriter, r *http.Request) {
-	jsonstr, err := decrypt(r.FormValue("key"))
+	request, err := RequestFromEncrypted(r.FormValue("key"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var request Request
-	err = json.Unmarshal([]byte(jsonstr), &request)
-	if err != nil {
-		fmt.Println(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if request_timeout(request) {
-		fmt.Println("timeout")
+	if request_timeout(request) || request.Action != "POST" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -188,7 +199,25 @@ func postFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteFile(w http.ResponseWriter, r *http.Request) {
-
+	request, err := RequestFromEncrypted(r.URL.Query().Get("key"))
+	fmt.Printf(request.File_uuid, request.User_id)
+	if err != nil {
+		fmt.Println("parse error")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if request_timeout(request) || request.Action != "DELETE" {
+		fmt.Print("invalid request")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	err = os.Remove(request.FilePath(""))
+	if err != nil {
+		fmt.Println("Failed to delete file", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {

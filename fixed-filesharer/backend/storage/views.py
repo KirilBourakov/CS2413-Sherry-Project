@@ -209,7 +209,7 @@ class FileAPI(APIView):
             return Response({'error': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
 
         data = json.dumps({
-            'id': str(file.id),
+            'id': str(file.id) + '.' + file.filename.split('.')[-1],
             'author': str(file.author.id),
             'action': "GET",
             'time': int(time.time())
@@ -239,8 +239,8 @@ class FileAPI(APIView):
         file = get_object_or_404(File, pk=requested_file, author=request.user)
 
         data = json.dumps({
-            'id': str(file.id),
-            'author': str(file.author),
+            'id': str(file.id) + '.' + file.filename.split('.')[-1],
+            'author': str(file.author.id),
             'action': "DELETE",
             'time': int(time.time())
         })

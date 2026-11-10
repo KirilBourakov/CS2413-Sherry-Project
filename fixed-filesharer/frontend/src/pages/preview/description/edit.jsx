@@ -36,8 +36,9 @@ export default function Edit({ isPublic, shared_with, tags, id, update }){
             alert("Something went wrong. Please try again later.")
         }
         const key = (await response.json())['key']
+        console.log(key)
 
-        const fileResponse = await fetch(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${key}`, {
+        const fileResponse = await fetch(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${encodeURIComponent(key)}`, {
             method: 'DELETE',
         })
         if (response.status === 200){
