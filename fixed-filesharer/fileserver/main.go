@@ -6,25 +6,57 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
+const MAX_TIME int64 = 5 * 60
+const uploadDir = "./MEDIA_ROOT"
+
+type Request struct {
+	File_uuid string `json:"id"`
+	User_id   string `json:"author"`
+	Action    string `json:"action"`
+	Time      int64  `json:"time"`
+}
+
+func request_timeout(request Request) bool {
+	return (request.Time + MAX_TIME) < time.Now().Unix()
+}
+
 func decrypt(cyphertext string) (string, error) {
-	decoded, _ := base64.StdEncoding.DecodeString(cyphertext)
+	decoded, err := base64.StdEncoding.DecodeString(cyphertext)
+	if err != nil {
+		return "1", err
+	}
 
-	keystr, _ := hex.DecodeString(os.Getenv("FILE_KEY"))
-	key, _ := aes.NewCipher(keystr)
-	aesgcm, _ := cipher.NewGCM(key)
+	keystr, err := hex.DecodeString(os.Getenv("FILE_KEY"))
+	if err != nil {
+		return "2", err
+	}
+	key, err := aes.NewCipher(keystr)
+	if err != nil {
+		return "3", err
+	}
+	aesgcm, err := cipher.NewGCM(key)
+	if err != nil {
+		return "4", err
+	}
 
-	plaintext, _ := aesgcm.Open(nil, decoded[:12], decoded[12:], nil)
-	fmt.Printf("Decrypted Plaintext = %s\n", plaintext)
+	plaintext, err := aesgcm.Open(nil, decoded[:12], decoded[12:], nil)
+	if err != nil {
+		return "5", err
+	}
+	fmt.Println(string(plaintext))
 	return string(plaintext), nil
 }
 
@@ -45,7 +77,57 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func postFile(w http.ResponseWriter, r *http.Request) {
+	jsonstr, err := decrypt(r.FormValue("key"))
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
+	var request Request
+	err = json.Unmarshal([]byte(jsonstr), &request)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if request_timeout(request) {
+		fmt.Println("timeout")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	fmt.Print(request)
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	userpath := filepath.Join(uploadDir, request.User_id)
+	fpath := filepath.Join(userpath, request.File_uuid+filepath.Ext(header.Filename))
+	fmt.Printf("Uploading %s to %s\n", fpath, userpath)
+
+	err = os.MkdirAll(userpath, 0655)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	output, err := os.Create(fpath)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer output.Close()
+
+	_, err = io.Copy(output, file)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	fmt.Fprint(w, "File upload successful")
 }
 
 func deleteFile(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +135,7 @@ func deleteFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	godotenv.Load(".env.dev")
+	godotenv.Load(".env.development")
 
 	mux := http.NewServeMux()
 
@@ -74,7 +156,7 @@ func main() {
 		AllowedOrigins:   []string{"http://localhost:3000", "http://127.0.0.1:8000", "http://127.0.0.1:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
-		AllowCredentials: true,
+		AllowCredentials: false,
 	})
 
 	server := cors_options.Handler(mux)
