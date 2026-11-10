@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { FaRegFileExcel } from "react-icons/fa";
 import Description from './description';
 import FileNotAccessible from '../../components/fileNotAccessible'
-import { AuthContext } from '../../components/providers/authProvider';
+import {authedJSONFetch} from "../../scripts/authentication.js";
 
 export default function Preview(props){
     let location = useLocation();
@@ -40,15 +40,10 @@ export default function Preview(props){
 function FilePreview({extension, setFileAccessibleCode}){
     const { id } = useParams();
     const [fileURL, setFileURL] = useState(null)
-    const { authObj, setAuthObj } = useContext(AuthContext)
     // TODO: redo this component in a way where it support different file types and unknown file types.
     useEffect(() => {
         const getFile = async () => {
-            let response = await fetch(`${import.meta.env.VITE_API_URL}/storage/file?file=${id}`, {
-                headers: {
-                    "Authorization": `Token ${authObj.token}`,
-                }
-            })
+            let response = await authedJSONFetch(`storage/file?file=${id}`, 'GET')
             if (response.status !== 200){
                 setFileAccessibleCode(false)
                 return

@@ -1,34 +1,37 @@
-import { getCookie  } from './cookies';
+
+
+let token = null;
+let refreshCall = null;
 
 export async function login(username, password){
-    const credentials = `${username}:${password}`;
-    const encodedCredentials = btoa(credentials);
     const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/login`, {
         headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${encodedCredentials}`
+            'Content-Type': 'application/json'
         },
+        credentials: "include",
         method: 'POST',
+        body: JSON.stringify({
+            "username": username,
+            "password": password
+        })
     });
-    const body = await response.json()
-    updateToken(body.token, body.expiry)
-    return {
-        'status': response.status,
-        'body': body
+    if (response.status === 200){
+        token = (await response.json())['access'];
     }
+    return response;
 }
 
 export async function logout(){
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/logout/`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/logout`, {
         headers: {
-            'Authorization': `Token ${getToken().token}`
+            'Authorization': `Bearer ${token}`
         },
-        method: 'POST'
+        method: 'POST',
+        credentials: "include"
     });
-
-    if (response.status === 204 || response.status === 401){
-        clearUser()
-        return  Promise.resolve(true)
+    token = null;
+    if (response.status === 200){
+        return Promise.resolve(true)
     }
     return Promise.resolve(false)
 }
@@ -47,52 +50,76 @@ export async function register(username, password){
     return Promise.resolve(response.status)
 }
 
+export async function authedCallback(func) {
+    let status = await func(token)
+    if (status === 401){
+        await refreshToken()
+        status = await func(token)
+    }
+    return status
+}
+
+export async function authedJSONFetch(url, method, body=null){
+    let recalled = false
+    if (token === null){
+        await refreshToken()
+        recalled = true
+    }
+
+    let args = {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { "Authorization": `Bearer ${token}` }),
+        },
+        method: method,
+    }
+    if (body !== null){
+        args.body = JSON.stringify(body)
+    }
+
+    let result = await fetch(`${import.meta.env.VITE_API_URL}/${url}`, args)
+    if (result.status === 401 && !recalled){
+        await refreshToken()
+        args.headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+
+        return await fetch(`${import.meta.env.VITE_API_URL}/${url}`, args)
+    }
+    return result
+}
+
 export async function checkLoginAndRedirect(nav){
     const log = await isLoggedIn()
     if (!log) {
         return nav('/login')
     }
-} 
+}
+
+async function refreshToken(){
+    refreshCall ??= fetch(`${import.meta.env.VITE_API_URL}/user/auth/login/refresh`, {
+        method: "POST",
+        credentials: "include",
+    })
+    .then(async (response) => {
+        if (response.status === 200){
+            token = (await response.json())['access']
+            return true
+        }
+        token = null;
+        return false;
+    })
+    .finally(() => {
+        refreshCall = null;
+    });
+    return refreshCall;
+}
 
 export async function isLoggedIn(){
-    const token = getToken()
-    const tokenUndefined = (token.token === undefined || token.token === null)
-    const tokenExpired = (token.token === undefined || token.token === null || new Date() > new Date(token.expiry))
-    if (tokenExpired){
-        clearUser()
-    }
-    if (tokenUndefined || tokenExpired){
-        return Promise.resolve(false)
-    }
-
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/user/auth/check`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Token ${token.token}`,
-        },
-        method: 'GET',
-    });
-
+    const response = await authedJSONFetch('user/auth/check', 'GET')
     if (response.status !== 200){
-        updateToken(null, null)
         return Promise.resolve(false)
     }
     return Promise.resolve(true)
-}
-
-export function updateToken(token, expiry){
-    localStorage.setItem('token', token)
-    localStorage.setItem('expiry', expiry)
-}
-
-export function clearUser(){
-    window.localStorage.removeItem('token');
-    window.localStorage.removeItem('expiry');
-}
-
-export function getToken(){
-    return {
-        'expiry': localStorage.getItem('expiry') ? localStorage.getItem('expiry') : null,
-        'token': localStorage.getItem('token') ? localStorage.getItem('token') : null
-    }
 }

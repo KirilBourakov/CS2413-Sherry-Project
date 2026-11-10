@@ -7,12 +7,10 @@ import LocalSearch from './localSearch'
 import New from './new'
 import CreateDirectory from "./createDirectory";
 import { useLocation } from 'react-router-dom';
-import { checkLoginAndRedirect } from "../../scripts/authentication";
+import {authedJSONFetch, checkLoginAndRedirect} from "../../scripts/authentication";
 import { useNavigate } from "react-router-dom";
-import { AuthContext } from "../../components/providers/authProvider";
 
 export default function Main(){
-    const { authObj, setAuthObj } = useContext(AuthContext)
     const nav = useNavigate()
     const location = useLocation();
 
@@ -35,13 +33,7 @@ export default function Main(){
     }, [location]);
 
     const fetchContents = async () => {
-        let response = await fetch(`${import.meta.env.VITE_API_URL}/storage/directory?path=${path}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Token ${authObj.token}`,
-            },
-            method: 'get',
-        })
+        let response = await authedJSONFetch(`storage/directory?path=${path}`,'GET')
         response = await response.json()
         setContents(response)
     };

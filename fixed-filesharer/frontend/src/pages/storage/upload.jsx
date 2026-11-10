@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import {createRef, useContext, useRef, useState} from 'react';
 import AlertDanger from '../../components/AlertDanger';
 import AlertSuccess from '../../components/AlertSuccess';
-import { AuthContext } from '../../components/providers/authProvider';
+import {authedCallback} from "../../scripts/authentication.js";
 
 const variants = {
     HoverSubmitFile:{
@@ -29,8 +29,6 @@ const variants = {
 };
 
 export default function Upload(props){
-    const { authObj, setAuthObj } = useContext(AuthContext)
-
     const [uploadPrecentage, changeUploadPrecentage] = useState(0);
     const fileRef = useRef(null);
     const tagRef = useRef(null);
@@ -62,44 +60,34 @@ export default function Upload(props){
         formData.append('directory', props.directory)
         formData.append('tags', tagRef.current.value)
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${import.meta.env.VITE_API_URL}/storage/file`, true);
-        xhr.setRequestHeader('Authorization', `Token ${authObj.token}`);
 
-        const promise = new Promise((resolve, reject) => {
-            xhr.onload = () => {
-                if (xhr.status === 201) {
-                    resolve();
-                } else {
-                    reject('Something went wrong, please try again later');
-                }
-            };
+        const sendFile = (token) => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${import.meta.env.VITE_API_URL}/storage/file`, true);
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
-            xhr.onerror = () => {
-                reject('Network error occurred');
-            };
-
+            xhr.onload = () => resolve(xhr.status);
+            xhr.onerror = () => reject(new Error('Network error occurred'));
             xhr.upload.onprogress = (event) => {
                 if (event.lengthComputable) {
-                    const percentComplete = Math.round((event.loaded / event.total) * 100);
-                    changeUploadPrecentage(percentComplete)
+                    changeUploadPrecentage(Math.round((event.loaded / event.total) * 100))
                 }
             };
+
+            xhr.send(formData);
         });
 
-        xhr.send(formData);
-
         try {
-            await promise
-            console.log("waited!")
-            props.update()
-            console.log("updated!")
-            console.log(props)
+            const status = await authedCallback(sendFile);
+            if (status !== 201) {
+                throw new Error('Something went wrong, please try again later');
+            }
+
             fileRef.current.value = ''
             tagRef.current.value = ''
-             console.log("reset!")
-        } catch (error) {
-            alertError(error);
+            props.update()
+        } catch (err) {
+            alertError(err.message)
         }
     }
 
