@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,6 +24,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-u-zp_axf-rhmn(4ntov8e&mtgka@l#!ma%&=6db#@13mqmt=k='
+
+
+load_dotenv(dotenv_path= BASE_DIR / ".env.development")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

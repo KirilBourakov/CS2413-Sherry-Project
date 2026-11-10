@@ -80,6 +80,7 @@ class UploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
         fields = ['id', 'filename', 'directory', 'tags', 'author']
+        read_only_fields = ['author', 'id']
 
     def validate_directory(self, value):
         user = self.context['request'].user

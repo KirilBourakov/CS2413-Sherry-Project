@@ -19,9 +19,6 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions, status, parsers
 
-
-load_dotenv(dotenv_path=".env.development")
-
 # Get, make and delete directory
 class DirectoryAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -194,7 +191,6 @@ class FileAPI(APIView):
         return [permissions.IsAuthenticated()]
 
     authentication_classes = [JWTAuthentication]
-    parser_classes = [parsers.MultiPartParser]
 
     def get(self, request, *args, **kwargs):
         requested_file = request.GET.get('file', None)
@@ -213,8 +209,8 @@ class FileAPI(APIView):
             return Response({'error': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
 
         data = json.dumps({
-            'id': file.id,
-            'author': file.id,
+            'id': str(file.id),
+            'author': str(file.author.id),
             'action': "GET",
             'time': int(time.time())
         })
@@ -257,8 +253,7 @@ class FileAPI(APIView):
         request_data = json.loads(self.decrypt(key))
 
         if request_data['action'] == "UPLOAD_SUCCESS":
-            fileid = request_data['id']
-            file = File.objects.get(id=fileid)
+            file = File.objects.get(id=request_data['id'], author=request.user)
             file.pending = False
             file.save()
             return Response(status=status.HTTP_200_OK)
