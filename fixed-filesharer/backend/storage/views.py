@@ -1,17 +1,28 @@
+import base64
+import json
+import os
+import time
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from django.shortcuts import render, HttpResponse
 from django.http import FileResponse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from dotenv import load_dotenv
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
-from .serializers import DirectoryContentDirectorySerializer, DirectoryContentFileSerializer, UploadSerializer, CreateDirectorySerializer, FileSerializer, FileInfoSerializer, SearchPayloadSerializer
+from .serializers import DirectoryContentDirectorySerializer, DirectoryContentFileSerializer, UploadSerializer, CreateDirectorySerializer, FileInfoSerializer, SearchPayloadSerializer
 from .models import File, Directory
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import permissions, status, parsers
 
+
+load_dotenv(dotenv_path=".env.development")
+
+# Get, make and delete directory
 class DirectoryAPI(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
@@ -51,6 +62,7 @@ class DirectoryAPI(APIView):
         directory.delete()
         return Response(status=status.HTTP_200_OK)
 
+# Search through files
 class SearchAPI(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
@@ -105,6 +117,7 @@ class SearchAPI(APIView):
             return Response(data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)       
 
+# get id of directory
 class DirectoryId(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
@@ -113,52 +126,7 @@ class DirectoryId(APIView):
             'id': directory.id
         }, status=status.HTTP_200_OK)
 
-class FileAPI(APIView):
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
 
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [AllowAny]
-    parser_classes = [parsers.MultiPartParser]
-
-    def get(self, request, *args, **kwargs):
-        requested_file = request.GET.get('file', None)
-        if requested_file is None:
-            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
-        if request.user.is_authenticated:
-            allowed = Q(pk=requested_file, author=request.user) | Q(pk=requested_file, shared_with=request.user)
-        else:
-            allowed = Q(pk=requested_file, public=True)
-        try:
-            file = File.objects.filter(allowed).first()
-        except File.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)  
-        if file is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)  
-              
-        response = FileResponse(file.file.open(), filename=file.filename)
-        return response
-
-    def post(self, request, *args, **kwargs):
-        print(request.data)
-        serializer = UploadSerializer(data=request.data, context={'request': request})
-        print(serializer)
-        if serializer.is_valid():
-            print('-----------------------------------')
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, *args, **kwargs):
-        requested_file = request.GET.get('file', None)
-        if requested_file is None:
-            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
-        file = get_object_or_404(File, pk=requested_file, author=request.user)
-        file.delete()
-        return Response(status=status.HTTP_200_OK)
-    
 class FileInfoAPI(APIView):
     authentication_classes = [JWTAuthentication]
     permission_classes = [AllowAny]
@@ -171,22 +139,23 @@ class FileInfoAPI(APIView):
     def get(self, request, *args, **kwargs):
         requested_file = request.GET.get('file', None)
         if requested_file is None:
-            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
-        
+            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             if request.user.is_authenticated:
-                file = File.objects.filter(Q(author=request.user) | Q(shared_with=request.user)).filter(id=requested_file).first()
+                file = File.objects.filter(Q(author=request.user) | Q(shared_with=request.user)).filter(
+                    id=requested_file).first()
             else:
-                file =  File.objects.filter(public=True).filter(id=requested_file).first()
+                file = File.objects.filter(public=True).filter(id=requested_file).first()
         except File.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
         serializer = FileInfoSerializer(file, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def patch(self, request, pk):
         if pk is None:
-            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
+            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST)
         instance = get_object_or_404(File, pk=pk, author=request.user)
         serializer = FileInfoSerializer(instance, data=request.data, partial=True, context={'request': request})
         print(serializer)
@@ -194,7 +163,7 @@ class FileInfoAPI(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     def post(self, request, pk):
         user = request.data.get('user')
         action = request.data.get('action')
@@ -202,7 +171,7 @@ class FileInfoAPI(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if pk is None:
-            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
+            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST)
         file = get_object_or_404(File, pk=pk, author=request.user)
 
         if user[0] == '#':
@@ -216,3 +185,95 @@ class FileInfoAPI(APIView):
             file.shared_with.remove(user)
         file.save()
         return Response(status=status.HTTP_200_OK)
+
+
+class FileAPI(APIView):
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    authentication_classes = [JWTAuthentication]
+    parser_classes = [parsers.MultiPartParser]
+
+    def get(self, request, *args, **kwargs):
+        requested_file = request.GET.get('file', None)
+        if requested_file is None:
+            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if request.user.is_authenticated:
+            allowed = Q(pk=requested_file, author=request.user) | Q(pk=requested_file, shared_with=request.user)
+        else:
+            allowed = Q(pk=requested_file, public=True)
+        try:
+            file = File.objects.filter(allowed).first()
+        except File.DoesNotExist:
+            file = None
+        if file is None:
+            return Response({'error': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        data = json.dumps({
+            'id': file.id,
+            'author': file.id,
+            'action': "GET",
+            'time': int(time.time())
+        })
+
+        return Response({"key": self.encrypt(data)}, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        serializer = UploadSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+
+            data = json.dumps({
+                'id': str(serializer.data['id']),
+                'author': str(serializer.data['author']),
+                'action': "POST",
+                'time': int(time.time())
+            })
+
+            return Response({"key": self.encrypt(data)}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, *args, **kwargs):
+        requested_file = request.GET.get('file', None)
+        if requested_file is None:
+            return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
+        file = get_object_or_404(File, pk=requested_file, author=request.user)
+
+        data = json.dumps({
+            'id': str(file.id),
+            'author': str(file.author),
+            'action': "DELETE",
+            'time': int(time.time())
+        })
+
+        file.delete()
+        return Response({"key": self.encrypt(data)}, status=status.HTTP_200_OK)
+
+    def patch(self, request, *args, **kwargs):
+        key = request.data.get('key', None)
+        request_data = json.loads(self.decrypt(key))
+
+        if request_data['action'] == "UPLOAD_SUCCESS":
+            fileid = request_data['id']
+            file = File.objects.get(id=fileid)
+            file.pending = False
+            file.save()
+            return Response(status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def encrypt(self, plaintext: str) -> str:
+        nonce = os.urandom(12)
+        aesgcm = AESGCM(os.getenv("FILE_KEY").encode())
+        return base64.b64encode((nonce + aesgcm.encrypt(nonce, plaintext.encode(), None))).decode("utf-8")
+
+    def decrypt(self, ciphertext: str) -> str:
+        raw_data = base64.b64decode(ciphertext.encode("utf-8"))
+        nonce = raw_data[:12]
+        content = raw_data[12:]
+
+        aesgcm = AESGCM(os.getenv("FILE_KEY").encode())
+        return aesgcm.decrypt(nonce, content, None).decode("utf-8")
