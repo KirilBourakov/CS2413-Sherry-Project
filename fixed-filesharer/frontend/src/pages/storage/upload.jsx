@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import {createRef, useContext, useRef, useState} from 'react';
 import AlertDanger from '../../components/AlertDanger';
 import AlertSuccess from '../../components/AlertSuccess';
-import {authedCallback} from "../../scripts/authentication.js";
+import {authedCallback, authedJSONFetch} from "../../scripts/authentication.js";
 
 const variants = {
     HoverSubmitFile:{
@@ -48,22 +48,31 @@ export default function Upload(props){
         setSuccessView(true);
         setTimeout(() => { setSuccessView(false); }, 5000);
         return
-    } 
+    }
 
     const uploadFile = async (e) => {
         e.preventDefault()
 
-        const formData = new FormData();
+        // Get upload request
         const file = fileRef.current.files[0];
+        const uploadResponse = await authedJSONFetch(`storage/file`, 'POST', { // TODO: no refresh if you wait a long time?
+            filename: file.name,
+            directory: props.directory,
+            tags: tagRef.current.value,
+        })
+        if (uploadResponse.status !== 201){
+            alertError("Something went wrong, please try again later.")
+            return
+        }
+        const uploadToken = (await uploadResponse.json())['key']
+
+        // Send file
+        const formData = new FormData();
+        formData.append('key', uploadToken)
         formData.append('file', file)
-        formData.append('filename', file.name)
-        formData.append('directory', props.directory)
-        formData.append('tags', tagRef.current.value)
-
-
         const sendFile = (token) => new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open('POST', `${import.meta.env.VITE_API_URL}/storage/file`, true);
+            xhr.open('POST', `${import.meta.env.VITE_FILE_URL}/storage/file`, true);
             xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
             xhr.onload = () => resolve(xhr.status);
@@ -79,7 +88,7 @@ export default function Upload(props){
 
         try {
             const status = await authedCallback(sendFile);
-            if (status !== 201) {
+            if (status !== 200) {
                 throw new Error('Something went wrong, please try again later');
             }
 

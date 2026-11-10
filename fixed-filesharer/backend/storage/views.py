@@ -262,7 +262,7 @@ class FileAPI(APIView):
 
     def encrypt(self, plaintext: str) -> str:
         nonce = os.urandom(12)
-        aesgcm = AESGCM(os.getenv("FILE_KEY").encode())
+        aesgcm = AESGCM(bytes.fromhex(os.getenv("FILE_KEY")))
         return base64.b64encode((nonce + aesgcm.encrypt(nonce, plaintext.encode(), None))).decode("utf-8")
 
     def decrypt(self, ciphertext: str) -> str:
@@ -270,5 +270,5 @@ class FileAPI(APIView):
         nonce = raw_data[:12]
         content = raw_data[12:]
 
-        aesgcm = AESGCM(os.getenv("FILE_KEY").encode())
+        aesgcm = AESGCM(bytes.fromhex(os.getenv("FILE_KEY")))
         return aesgcm.decrypt(nonce, content, None).decode("utf-8")

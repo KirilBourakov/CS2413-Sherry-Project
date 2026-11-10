@@ -32,6 +32,14 @@ export default function Edit({ isPublic, shared_with, tags, id, update }){
     }
     const deleteFile = async () => {
         const response = await authedJSONFetch(`storage/file?file=${id}`, 'DELETE')
+        if (response.status !== 200){
+            alert("Something went wrong. Please try again later.")
+        }
+        const key = (await response.json())['key']
+
+        const fileResponse = await fetch(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${key}`, {
+            method: 'DELETE',
+        })
         if (response.status === 200){
             nav('/storage')
         }

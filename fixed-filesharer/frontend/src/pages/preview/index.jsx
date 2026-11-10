@@ -40,16 +40,17 @@ export default function Preview(props){
 function FilePreview({extension, setFileAccessibleCode}){
     const { id } = useParams();
     const [fileURL, setFileURL] = useState(null)
-    // TODO: redo this component in a way where it support different file types and unknown file types.
     useEffect(() => {
         const getFile = async () => {
-            let response = await authedJSONFetch(`storage/file?file=${id}`, 'GET')
+            const response = await authedJSONFetch(`storage/file?file=${id}`, 'GET')
             if (response.status !== 200){
                 setFileAccessibleCode(false)
                 return
             }
-            
-            response = await response.blob()
+            const key = (await response.json())['key']
+
+            let file = await fetch(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${key}`)
+            file = await file.blob()
             setFileURL(URL.createObjectURL(response))
         }
         getFile()

@@ -10,6 +10,7 @@ services:
         ./frontend
       args:
         - VITE_API_URL=http://localhost:8000
+        - VITE_FILE_URL=http://localhost:8080
     ports:
       - "127.0.0.1:3000:80"
     depends_on:
