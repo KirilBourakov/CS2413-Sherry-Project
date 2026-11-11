@@ -8,18 +8,17 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 )
 
 func handleFileUpload(request Request, r *http.Request) (string, error) {
-	file, header, err := r.FormFile("file")
+	file, _, err := r.FormFile("file")
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	fpath := request.FilePath(filepath.Ext(header.Filename))
+	fpath := request.FilePath()
 	err = os.MkdirAll(request.UserPath(), 0655)
 	if err != nil {
 		return "", err

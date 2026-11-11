@@ -18,7 +18,7 @@ func deleteFile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	err = os.Remove(request.FilePath(""))
+	err = os.Remove(request.FilePath())
 	if err != nil {
 		fmt.Println("Failed to delete file", err)
 		w.WriteHeader(http.StatusBadRequest)

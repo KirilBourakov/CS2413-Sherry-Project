@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"mime"
 	"net/http"
-	"path/filepath"
 )
 
 func getFile(w http.ResponseWriter, r *http.Request) {
@@ -19,14 +17,9 @@ func getFile(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%q", request.File_uuid)) // TODO: keep file name on download?
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=%q", request.FileName)) // TODO: keep file name on download?
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Type", request.MimeFileType())
 
-	contentType := mime.TypeByExtension(filepath.Ext(request.File_uuid))
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
-	w.Header().Set("Content-Type", contentType)
-	
-	http.ServeFile(w, r, request.FilePath(""))
+	http.ServeFile(w, r, request.FilePath())
 }

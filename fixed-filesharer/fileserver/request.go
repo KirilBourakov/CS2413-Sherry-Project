@@ -2,25 +2,36 @@ package main
 
 import (
 	"encoding/json"
+	"mime"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
 const MAX_TIME int64 = 5 * 60
 
 type Request struct {
-	File_uuid string `json:"id"`
-	User_id   string `json:"author"`
-	Action    string `json:"action"`
-	Time      int64  `json:"time"`
+	FileUuid string `json:"file_uuid"`
+	FileName string `json:"file_name"`
+	UserId   int64  `json:"user_id"`
+	Action   string `json:"action"`
+	Time     int64  `json:"time"`
 }
 
 func (r *Request) UserPath() string {
-	return filepath.Join(uploadDir, r.User_id)
+	return filepath.Join(uploadDir, strconv.FormatInt(r.UserId, 10))
 }
 
-func (r *Request) FilePath(ext string) string { // TODO: figure out what's happening with extensions
-	return filepath.Join(r.UserPath(), r.File_uuid+ext)
+func (r *Request) FilePath() string { // TODO: figure out what's happening with extensions
+	return filepath.Join(r.UserPath(), r.FileUuid+filepath.Ext(r.FileName))
+}
+
+func (r *Request) MimeFileType() string {
+	contentType := mime.TypeByExtension(filepath.Ext(r.FilePath()))
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	return contentType
 }
 
 func (r *Request) RequestTimeout() bool {

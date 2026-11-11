@@ -2,6 +2,9 @@ import base64
 import json
 import os
 import time
+import uuid
+from dataclasses import dataclass, asdict, field
+from typing import Literal
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from django.shortcuts import render, HttpResponse
@@ -185,6 +188,39 @@ class FileInfoAPI(APIView):
 
 
 class FileAPI(APIView):
+    _aesgcm = None
+
+    @classmethod
+    def aesgcm(cls) -> AESGCM:
+        if not cls._aesgcm:
+            cls._aesgcm = AESGCM(bytes.fromhex(os.getenv("FILE_KEY")))
+        return cls._aesgcm
+
+    @dataclass(frozen=True)
+    class FileRequest:
+        file_uuid: str
+        file_name: str
+        user_id: int
+        action: Literal['GET', 'POST', 'DELETE', 'UPLOAD_SUCCESS']
+        time: int = field(default_factory=lambda: int(time.time()))
+
+        @staticmethod
+        def from_cypher(ciphertext: str) -> "FileRequest":
+            raw_data = base64.b64decode(ciphertext.encode("utf-8"))
+            nonce = raw_data[:12]
+            content = raw_data[12:]
+
+            json_str = FileAPI.aesgcm().decrypt(nonce, content, None).decode("utf-8")
+            return FileAPI.FileRequest(**json.loads(json_str))
+
+        @property
+        def encrypted(self) -> str:
+            nonce = os.urandom(12)
+            return base64.b64encode((nonce + FileAPI.aesgcm().encrypt(nonce, str(self).encode(), None))).decode("utf-8")
+
+        def __str__(self):
+            return json.dumps(asdict(self))
+
     def get_permissions(self):
         if self.request.method == 'GET' or self.request.method == 'PATCH':
             return [permissions.AllowAny()]
@@ -208,28 +244,28 @@ class FileAPI(APIView):
         if file is None:
             return Response({'error': 'file not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        data = json.dumps({
-            'id': str(file.id) + '.' + file.filename.split('.')[-1],
-            'author': str(file.author.id),
-            'action': "GET",
-            'time': int(time.time())
-        })
+        data = FileAPI.FileRequest(
+            file_uuid=str(file.id),
+            file_name=file.filename,
+            user_id=file.author.id,
+            action='GET'
+        )
 
-        return Response({"key": self.encrypt(data)}, status=status.HTTP_200_OK)
+        return Response({"key": data.encrypted}, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         serializer = UploadSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
 
-            data = json.dumps({
-                'id': str(serializer.data['id']),
-                'author': str(serializer.data['author']),
-                'action': "POST",
-                'time': int(time.time())
-            })
+            data = FileAPI.FileRequest(
+                file_uuid=serializer.data['id'],
+                file_name=serializer.data['filename'],
+                user_id=serializer.data['author'],
+                action="POST"
+            )
 
-            return Response({"key": self.encrypt(data)}, status=status.HTTP_201_CREATED)
+            return Response({"key": data.encrypted}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, *args, **kwargs):
@@ -238,37 +274,23 @@ class FileAPI(APIView):
             return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST) 
         file = get_object_or_404(File, pk=requested_file, author=request.user)
 
-        data = json.dumps({
-            'id': str(file.id) + '.' + file.filename.split('.')[-1],
-            'author': str(file.author.id),
-            'action': "DELETE",
-            'time': int(time.time())
-        })
+        data = FileAPI.FileRequest(
+            file_uuid=str(file.id),
+            file_name=file.filename,
+            user_id=file.author.id,
+            action='DELETE'
+        )
 
         file.delete()
-        return Response({"key": self.encrypt(data)}, status=status.HTTP_200_OK)
+        return Response({"key": data.encrypted}, status=status.HTTP_200_OK)
 
     def patch(self, request, *args, **kwargs):
         key = request.data.get('key', None)
-        request_data = json.loads(self.decrypt(key))
+        data = FileAPI.FileRequest.from_cypher(key)
 
-        if request_data['action'] == "UPLOAD_SUCCESS":
-            file = File.objects.get(id=request_data['id'])
+        if data.action == 'UPLOAD_SUCCESS':
+            file = File.objects.get(id=data.file_uuid)
             file.pending = False
             file.save()
             return Response(status=status.HTTP_200_OK)
-
         return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    def encrypt(self, plaintext: str) -> str:
-        nonce = os.urandom(12)
-        aesgcm = AESGCM(bytes.fromhex(os.getenv("FILE_KEY")))
-        return base64.b64encode((nonce + aesgcm.encrypt(nonce, plaintext.encode(), None))).decode("utf-8")
-
-    def decrypt(self, ciphertext: str) -> str:
-        raw_data = base64.b64decode(ciphertext.encode("utf-8"))
-        nonce = raw_data[:12]
-        content = raw_data[12:]
-
-        aesgcm = AESGCM(bytes.fromhex(os.getenv("FILE_KEY")))
-        return aesgcm.decrypt(nonce, content, None).decode("utf-8")
