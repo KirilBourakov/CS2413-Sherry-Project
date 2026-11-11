@@ -234,7 +234,11 @@ class FileAPI(APIView):
             return Response({'error': 'no file requested'}, status=status.HTTP_400_BAD_REQUEST)
 
         if request.user.is_authenticated:
-            allowed = Q(pk=requested_file, author=request.user, pending=False) | Q(pk=requested_file, shared_with=request.user, pending=False)
+            allowed = (
+                Q(pk=requested_file, author=request.user, pending=False) |
+                Q(pk=requested_file, shared_with=request.user, pending=False) |
+                Q(pk=requested_file, public=True, pending=False)
+            )
         else:
             allowed = Q(pk=requested_file, public=True, pending=False)
         try:
