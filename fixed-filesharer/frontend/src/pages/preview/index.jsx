@@ -58,21 +58,28 @@ function FilePreview({extension, setFileAccessibleCode}){
 
     if (images.includes(extension)){
         FileView = (
-            <a href={fileURL} target="_blank">
-                <img 
-                    src={fileURL}
-                    style={{
-                        width: '75%',
-                        maxHeight: '85vh',
-                        objectFit: 'contain',
-                        display: 'block',  
-                    }}
-                />
-            </a>
+            <img
+                src={fileURL}
+                alt={"User provided image"}
+                style={{
+                    width: '75%',
+                    maxHeight: '85vh',
+                    objectFit: 'contain',
+                    display: 'block',
+                }}
+            />
         )
     }
     if (text.includes(extension) || pdf.includes(extension)){
-        FileView = <iframe src={fileURL} className='pdf'> </iframe>
+        FileView = (
+            <iframe
+                credentialless='True'
+                allow=""
+                src={fileURL}
+                className='pdf'
+            >
+            </iframe>
+        )
     }
 
     if (FileView === null){
