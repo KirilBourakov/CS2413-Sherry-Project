@@ -79,12 +79,11 @@ class UploadSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = File
-        fields = ['file', 'filename', 'directory', 'tags']
+        fields = ['id', 'filename', 'directory', 'tags', 'author']
+        read_only_fields = ['author', 'id']
 
     def validate_directory(self, value):
-        # Validate that the directory exists for the current user
         user = self.context['request'].user
-        print(';;;;;;;;;;;;;;;;;;;;;')
         directory = get_object_or_404(Directory, owner=user, name=value)
         return directory
 
@@ -95,27 +94,11 @@ class UploadSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Directory does not exist or user does not have access.")
         return File.objects.create(
             author=user,
-            file=validated_data['file'], 
             filename=validated_data['filename'],
             tags=validated_data.get('tags', ""),
             directory=directory,     
         )    
 
-class CustomFileField(serializers.FileField):
-    def to_representation(self, value):
-        # `value` is the file-like object or binary data
-        if hasattr(value, 'read'):
-            # If `value` is a file-like object (e.g., FileField in Django)
-            return value.read()
-        return value  # If `value` is already binary data
-
-    def to_internal_value(self, data):
-        return data
-class FileSerializer(serializers.ModelSerializer):
-    file = CustomFileField()
-    class Meta:
-        model = File
-        fields = ['file']
 class FileInfoSerializer(serializers.ModelSerializer):
     author_name = serializers.SerializerMethodField()
     is_author = serializers.SerializerMethodField()

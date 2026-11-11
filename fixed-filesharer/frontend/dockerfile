@@ -13,7 +13,9 @@ CMD ["npm", "start"]
 # Build
 FROM base AS build
 ARG VITE_API_URL
+ARG VITE_FILE_URL
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_FILE_URL=$VITE_FILE_URL
 COPY . .
 RUN npm run build
 

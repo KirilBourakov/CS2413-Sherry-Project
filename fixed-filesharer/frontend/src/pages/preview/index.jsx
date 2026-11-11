@@ -40,17 +40,16 @@ export default function Preview(props){
 function FilePreview({extension, setFileAccessibleCode}){
     const { id } = useParams();
     const [fileURL, setFileURL] = useState(null)
-    // TODO: redo this component in a way where it support different file types and unknown file types.
     useEffect(() => {
         const getFile = async () => {
-            let response = await authedJSONFetch(`storage/file?file=${id}`, 'GET')
+            const response = await authedJSONFetch(`storage/file?file=${id}`, 'GET')
             if (response.status !== 200){
                 setFileAccessibleCode(false)
                 return
             }
+            const key = (await response.json())['key']
             
-            response = await response.blob()
-            setFileURL(URL.createObjectURL(response))
+            setFileURL(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${encodeURIComponent(key)}`)
         }
         getFile()
     }, [])
@@ -59,21 +58,28 @@ function FilePreview({extension, setFileAccessibleCode}){
 
     if (images.includes(extension)){
         FileView = (
-            <a href={fileURL} target="_blank">
-                <img 
-                    src={fileURL}  
-                    style={{
-                        width: '75%',
-                        maxHeight: '85vh',
-                        objectFit: 'contain',
-                        display: 'block',  
-                    }}
-                />
-            </a>
+            <img
+                src={fileURL}
+                alt={"User provided image"}
+                style={{
+                    width: '75%',
+                    maxHeight: '85vh',
+                    objectFit: 'contain',
+                    display: 'block',
+                }}
+            />
         )
     }
     if (text.includes(extension) || pdf.includes(extension)){
-        FileView = <iframe src={fileURL} className='pdf'> </iframe>
+        FileView = (
+            <iframe
+                credentialless='True'
+                allow=""
+                src={fileURL}
+                className='pdf'
+            >
+            </iframe>
+        )
     }
 
     if (FileView === null){

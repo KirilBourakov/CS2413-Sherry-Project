@@ -4,12 +4,22 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
 
+  fileserver:
+    build: ./fileserver
+    ports:
+      - "8080:8080"
+    environment:
+      - BACKEND_URL=http://server:8000
+    depends_on:
+      - server
+
   app:
     build: 
       context:
         ./frontend
       args:
         - VITE_API_URL=http://localhost:8000
+        - VITE_FILE_URL=http://localhost:8080
     ports:
       - "127.0.0.1:3000:80"
     depends_on:
