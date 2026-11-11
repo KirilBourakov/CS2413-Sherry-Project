@@ -48,10 +48,8 @@ function FilePreview({extension, setFileAccessibleCode}){
                 return
             }
             const key = (await response.json())['key']
-
-            let file = await fetch(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${key}`)
-            file = await file.blob()
-            setFileURL(URL.createObjectURL(response))
+            
+            setFileURL(`${import.meta.env.VITE_FILE_URL}/storage/file?key=${encodeURIComponent(key)}`)
         }
         getFile()
     }, [])
@@ -62,7 +60,7 @@ function FilePreview({extension, setFileAccessibleCode}){
         FileView = (
             <a href={fileURL} target="_blank">
                 <img 
-                    src={fileURL}  
+                    src={fileURL}
                     style={{
                         width: '75%',
                         maxHeight: '85vh',

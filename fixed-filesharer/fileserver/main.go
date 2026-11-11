@@ -101,7 +101,21 @@ func encrypt(plaintext string) (string, error) {
 }
 
 func getFile(w http.ResponseWriter, r *http.Request) {
-
+	request, err := RequestFromEncrypted(r.URL.Query().Get("key"))
+	if err != nil {
+		fmt.Println("parse error")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if request_timeout(request) || request.Action != "GET" {
+		fmt.Print("invalid request")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", request.File_uuid)) // TODO: keep file name on download?
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Type", "application/octet-stream")
+	http.ServeFile(w, r, request.FilePath(""))
 }
 
 func handleFileUpload(request Request, r *http.Request) (string, error) {
@@ -200,7 +214,6 @@ func postFile(w http.ResponseWriter, r *http.Request) {
 
 func deleteFile(w http.ResponseWriter, r *http.Request) {
 	request, err := RequestFromEncrypted(r.URL.Query().Get("key"))
-	fmt.Printf(request.File_uuid, request.User_id)
 	if err != nil {
 		fmt.Println("parse error")
 		w.WriteHeader(http.StatusBadRequest)
