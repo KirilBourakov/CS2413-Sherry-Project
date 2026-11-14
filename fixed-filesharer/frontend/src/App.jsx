@@ -3,6 +3,7 @@ import './resources/css/custom.scss';
 
 //react & js
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // componenets
 import Navbar from './components/navbar';

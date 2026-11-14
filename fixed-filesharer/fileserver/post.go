@@ -9,17 +9,48 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	svg "github.com/h2non/go-is-svg"
+	svgsanitize "go.privatebychoice.com/pbcsvgsanitize"
 )
 
+const MaxFileSize = 20 << 20
+
+func sanitize(fileBytes []byte) ([]byte, error) {
+	if svg.Is(fileBytes) {
+		clean, _, err := svgsanitize.Sanitize(fileBytes)
+		if err != nil {
+			return nil, err
+		}
+		fileBytes = clean
+	}
+	return fileBytes, nil
+}
+
 func handleFileUpload(request Request, r *http.Request) (string, error) {
+	err := r.ParseMultipartForm(MaxFileSize)
+	if err != nil {
+		return "", err
+	}
+
 	file, _, err := r.FormFile("file")
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	fileBytes, err = sanitize(fileBytes)
+	if err != nil {
+		return "", err
+	}
+
 	fpath := request.FilePath()
-	err = os.MkdirAll(request.UserPath(), 0655)
+	err = os.MkdirAll(request.UserPath(), 0755)
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +61,8 @@ func handleFileUpload(request Request, r *http.Request) (string, error) {
 	}
 	defer output.Close()
 
-	_, err = io.Copy(output, file)
+	_, err = output.Write(fileBytes)
+
 	if err != nil {
 		return "", err
 	}
