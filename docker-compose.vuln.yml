@@ -1,0 +1,9 @@
+name: "Vulnerable-Sherry"
+include:
+ - "./vulnerable-filesharer/docker-compose.yml"
+
+services:
+  attacker:
+    build: ./exploit
+    ports:
+      - "127.0.0.1:9000:9000"

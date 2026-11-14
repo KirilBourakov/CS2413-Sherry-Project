@@ -20,13 +20,13 @@ class DirectoryAPI(APIView):
         user = request.user
         requested_directory = request.GET.get('path', '/')
 
-        if requested_directory == '/Shared_With_Me/':
+        if requested_directory == '/Shared_With_Me':
             subdirectories = Directory.objects.filter(shared_with=user) 
         else:
             subdirectories = Directory.objects.filter(owner=user).filter(parent__name=requested_directory)
         directory_serializer = DirectoryContentDirectorySerializer(subdirectories, many=True)
 
-        if requested_directory == '/Shared_With_Me/':
+        if requested_directory == '/Shared_With_Me':
             files = File.objects.filter(shared_with=user)
         else:
             files = File.objects.filter(author=user).filter(directory__name=requested_directory)

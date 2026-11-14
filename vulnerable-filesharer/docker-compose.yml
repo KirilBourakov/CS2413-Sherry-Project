@@ -3,6 +3,9 @@ services:
     build: ./backend
     ports:
       - "127.0.0.1:8000:8000"
+    volumes:
+      - ./backend/db.sqlite3:/app/db.sqlite3
+      - ./backend/database/usercontent:/app/database/usercontent 
 
   app:
     build: 

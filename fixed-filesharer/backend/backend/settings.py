@@ -31,7 +31,7 @@ load_dotenv(dotenv_path= BASE_DIR / ".env.development")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['server', 'localhost']
 
 UPLOAD_ROOT = os.path.join('database', 'usercontent')
 
