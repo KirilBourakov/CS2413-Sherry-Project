@@ -8,7 +8,7 @@ The codebase is structured as such:
 - **exploit/** contains the attacks server, as well as the exploit code. The exploit is an XSS caused by an SVG.
 
 - **fixed-filesharer/** contains the code for the web app, with the vulnerability batched. Three primary fixes were done:
-    1. The vulnerable version stored the authorization token in localhost. Now, we store a refresh token in http only cookie, and a short lived access token in memory. The refresh token is used refresh the in memory access token.
+    1. The vulnerable version stored the authentication token in localhost. Now, we store a refresh token in http only cookie, and a short lived access token in memory. The refresh token is used refresh the in memory access token.
     2. The filestorage is now handled on a seperate webserver. These would be deployed to different URLs. This means that even if XSS was successfully done, it would be running on a website that stores no credentials. Messages are passed securly useing a shared private key and the AESGM algorithm.
     3. Dependencies were updated from known vulnerable versions.
 
@@ -28,12 +28,16 @@ Running requires the following ports:
 4. 9000 (attacker server)
 
 # The vulnerability
+The vulnerability is that a XSS can extract a authentication token in localstore. 
+
 For testing both fixed and vulnerable were seeded with two accounts:
 
 |username | password 
 | --- | --- | 
 | attacker | attacker |
 | target| target |
+
+The attacker has uploaded **exploit\attack.svg** to the fileserver, and has shared it with target. 
 
 To see the attack in action, login at localhost:3000 as target, navigate to the shared_with_me folder, and click on attack.svg. Open the image in a new tab.
 Then, navigate to localhost:9000 to see the exfiltrated token.
