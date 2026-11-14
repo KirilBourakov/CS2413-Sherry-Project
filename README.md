@@ -17,9 +17,9 @@ The codebase is structured as such:
 # Running
 This project recommends [docker](https://docs.docker.com/desktop/setup/install/windows-install/) to run. With docker installed, and docker desktop running, use:
 
-``docker compose -f docker-compose.vuln.yml up`` to run the vulnerable app and attacker service.
+``docker compose -f docker-compose.vuln.yml up --build`` to run the vulnerable app and attacker service.
 
-``docker compose -f docker-compose.fixed.yml up`` to run the fixed app and attacker service.
+``docker compose -f docker-compose.fixed.yml up --build`` to run the fixed app and attacker service.
 
 Running requires the following ports:
 1. 3000 (frontend)
@@ -37,3 +37,5 @@ For testing both fixed and vulnerable were seeded with two accounts:
 
 To see the attack in action, login at localhost:3000 as target, navigate to the shared_with_me folder, and click on attack.svg. Open the image in a new tab.
 Then, navigate to localhost:9000 to see the exfiltrated token.
+
+It is recommended to close all tabs before switching between the vulnerable and fixed server versions.

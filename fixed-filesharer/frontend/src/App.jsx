@@ -15,6 +15,10 @@ import Item from './pages/preview';
 import Search from './pages/search';
 
 function App() {
+  useEffect(() => {
+    window.localStorage.removeItem('token');
+  }, []);
+
   return (
       <Router>
         <Navbar/>

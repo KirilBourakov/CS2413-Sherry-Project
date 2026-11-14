@@ -58,16 +58,18 @@ function FilePreview({extension, setFileAccessibleCode}){
 
     if (images.includes(extension)){
         FileView = (
-            <img
-                src={fileURL}
-                alt={"User provided image"}
-                style={{
-                    width: '75%',
-                    maxHeight: '85vh',
-                    objectFit: 'contain',
-                    display: 'block',
-                }}
-            />
+            <a href={fileURL} target="_blank">
+                <img
+                    src={fileURL}
+                    alt={"User provided image"}
+                    style={{
+                        width: '75%',
+                        maxHeight: '85vh',
+                        objectFit: 'contain',
+                        display: 'block',
+                    }}
+                />
+            </a>
         )
     }
     if (text.includes(extension) || pdf.includes(extension)){
