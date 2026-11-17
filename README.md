@@ -45,4 +45,4 @@ On the fixed side, we disabled our santization for **exploit\attack.svg**, to sh
 To see the attack in action, login at localhost:3000 as target, navigate to the shared_with_me folder, and click on attack.svg. Open the image in a new tab.
 Then, navigate to localhost:9000 to see the exfiltrated token.
 
-It is recommended to close all tabs before switching between the vulnerable and fixed server versions.
+It is recommended to close all tabs before switching between the vulnerable and fixed server versions, and do a hard refresh.

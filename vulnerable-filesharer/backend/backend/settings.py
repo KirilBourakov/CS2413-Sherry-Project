@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-u-zp_axf-rhmn(4ntov8e&mtgka@l#!ma%&=6db#@13mqmt=k=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['server', 'localhost']
 
 UPLOAD_ROOT = os.path.join('database', 'usercontent')
 
