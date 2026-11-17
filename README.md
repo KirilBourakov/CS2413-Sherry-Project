@@ -9,7 +9,7 @@ The codebase is structured as such:
 
 - **fixed-filesharer/** contains the code for the web app, with the vulnerability batched. Four primary fixes were done:
     1. The vulnerable version stored the authentication token in localhost. Now, we store a refresh token in http only cookie, and a short lived access token in memory. The refresh token is used refresh the in memory access token.
-    2. The filestorage is now handled on a seperate webserver. These would be deployed to different URLs. This means that even if XSS was successfully done, it would be running on a website that stores no credentials. Messages are passed securly useing a shared private key and the AESGM algorithm.
+    2. The filestorage is now handled on a seperate webserver. These would be deployed to different URLs. This means that even if XSS was successfully done, it would be running on a website that stores no credentials. Messages are passed securly using a shared private key and the AESGM algorithm.
     3. The filestorage server santizes user input, and rejects when it cannot.
     4. Dependencies were updated from known vulnerable versions.
 
